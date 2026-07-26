@@ -77,23 +77,54 @@ bun run build
 
 ---
 
-## Background Autostart Setup
+## Manual Background Autostart Setup
 
-### Systemd User Service
+You can configure `bathist` to run continuously in the background on boot using either **Systemd** or **Hyprland**.
 
-Generate and install the user service:
+### Option A: Systemd User Service Setup
+
+1. Create a user service file at `~/.config/systemd/user/bathist.service`:
+
+```ini
+[Unit]
+Description=bathist Battery Monitoring Daemon
+Documentation=https://github.com/neon/bathist
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/path/to/bathist/dist/bathist daemon
+Restart=always
+RestartSec=5
+Nice=19
+CPUSchedulingPolicy=idle
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
+```
+*(Replace `/path/to/bathist/dist/bathist` with the absolute path to your compiled binary or `bun run /path/to/src/cli.ts daemon`)*
+
+2. Enable and start the service:
 
 ```bash
-bun run src/cli.ts service install
-
-# Enable and start immediately:
 systemctl --user daemon-reload
 systemctl --user enable --now bathist.service
 ```
 
-### Hyprland Integration
+3. Check service status & logs:
 
-Add to your `~/.config/hypr/hyprland.conf`:
+```bash
+systemctl --user status bathist.service
+journalctl --user -u bathist.service -f
+```
+
+---
+
+### Option B: Hyprland Autostart Setup
+
+Add the following line to your Hyprland configuration file (`~/.config/hypr/hyprland.conf`):
 
 ```ini
 exec-once = /path/to/bathist/dist/bathist daemon
@@ -134,7 +165,6 @@ Commands:
   status [options]  Print current live battery status and health summary to CLI
   report [options]  Generate a standalone interactive HTML dashboard
   export [options]  Export raw recorded battery metrics to JSON or CSV
-  service [action]  Install systemd user service or print Hyprland config snippet
   prune [options]   Prune database logs older than specified days
   help [command]    display help for command
 ```
@@ -160,7 +190,6 @@ bathist/
 │   ├── daemon.ts         # Background collector loop
 │   ├── db.ts             # Native bun:sqlite database driver (WAL mode)
 │   ├── reporter.ts       # HTML report compiler & Base64 encoder
-│   ├── service.ts        # Systemd & Hyprland autostart integrations
 │   ├── sysfs.ts          # Linux /sys/class/power_supply reader
 │   ├── types.ts          # TypeScript interfaces & types
 │   └── templates/

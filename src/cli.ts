@@ -3,7 +3,6 @@ import { discoverBatteries, readBatterySnapshot, getBatteryStaticInfo } from "./
 import { runDaemon } from "./daemon.js";
 import { BatteryDatabase } from "./db.js";
 import { generateHtmlReport } from "./reporter.js";
-import { installSystemdService, printHyprlandInstruction, generateSystemdServiceContent } from "./service.js";
 import { writeFileSync } from "fs";
 
 const program = new Command();
@@ -144,25 +143,6 @@ program
       console.log(`✅ Exported ${readings.length} records to ${options.output}`);
     } else {
       console.log(content);
-    }
-  });
-
-// Service Command
-program
-  .command("service [action]")
-  .description("Install systemd user service or print Hyprland config snippet (actions: install, systemd, hyprland)")
-  .action((action = "install") => {
-    const execPath = process.argv[1]?.endsWith(".ts")
-      ? `bun run ${process.argv[1]}`
-      : process.argv[1] || "bathist";
-
-    if (action === "install") {
-      installSystemdService(execPath);
-      printHyprlandInstruction(execPath);
-    } else if (action === "systemd") {
-      console.log(generateSystemdServiceContent(execPath));
-    } else if (action === "hyprland") {
-      printHyprlandInstruction(execPath);
     }
   });
 
