@@ -562,9 +562,9 @@ export function renderReportHtml(payloadBase64: string): string {
         readings = DATA.readingsMap[currentBattery] || [];
       }
 
-      if (currentTimeRange === "all") return readings;
+      if (readings.length === 0 || currentTimeRange === "all") return readings;
 
-      const nowSec = Math.floor(Date.now() / 1000);
+      const maxTimestamp = readings[readings.length - 1].timestamp;
       let secondsAgo = 86400;
       if (currentTimeRange === "1h") secondsAgo = 3600;
       else if (currentTimeRange === "6h") secondsAgo = 21600;
@@ -572,8 +572,9 @@ export function renderReportHtml(payloadBase64: string): string {
       else if (currentTimeRange === "7d") secondsAgo = 7 * 86400;
       else if (currentTimeRange === "30d") secondsAgo = 30 * 86400;
 
-      const cutoff = nowSec - secondsAgo;
-      return readings.filter(r => r.timestamp >= cutoff);
+      const cutoff = maxTimestamp - secondsAgo;
+      const filtered = readings.filter(r => r.timestamp >= cutoff);
+      return filtered.length > 0 ? filtered : readings;
     }
 
     function updateDashboard() {
@@ -739,7 +740,7 @@ export function renderReportHtml(payloadBase64: string): string {
         const keys = Object.keys(readings[0]);
         const csvRows = [keys.join(",")];
         readings.forEach(r => csvRows.push(keys.map(k => JSON.stringify(r[k] ?? "")).join(",")));
-        downloadFile(csvRows.join("\n"), "bathist_export.csv", "text/csv");
+        downloadFile(csvRows.join("\\n"), "bathist_export.csv", "text/csv");
       }
     }
 
