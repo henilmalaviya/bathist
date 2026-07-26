@@ -88,7 +88,6 @@ You can configure `bathist` to run continuously in the background on boot using 
 ```ini
 [Unit]
 Description=bathist Battery Monitoring Daemon
-Documentation=https://github.com/neon/bathist
 After=default.target
 
 [Service]
