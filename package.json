@@ -1,0 +1,34 @@
+{
+  "name": "bathist",
+  "version": "1.0.0",
+  "description": "Ultra-lightweight Linux battery monitoring daemon & interactive HTML report generator",
+  "main": "src/cli.ts",
+  "module": "src/cli.ts",
+  "type": "module",
+  "bin": {
+    "bathist": "./src/cli.ts"
+  },
+  "scripts": {
+    "start": "bun run src/cli.ts daemon",
+    "status": "bun run src/cli.ts status",
+    "report": "bun run src/cli.ts report",
+    "build": "bun build src/cli.ts --outfile dist/bathist --compile",
+    "test": "bun test"
+  },
+  "keywords": [
+    "battery",
+    "monitoring",
+    "linux",
+    "sysfs",
+    "sqlite",
+    "bun",
+    "typescript",
+    "hyprland",
+    "systemd"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
