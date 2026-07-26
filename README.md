@@ -1,10 +1,10 @@
 # bathist ⚡
 
-> High-performance Linux battery monitor & visual telemetry generator built with **Bun**, **TypeScript**, and **Commander**.
+> High-performance Linux battery monitor & visual telemetry generator built with **Bun**, **TypeScript**, **Handlebars**, and **Commander**.
 
 `bathist` is an ultra-lightweight, high-resolution battery monitoring daemon and interactive visual analytics generator designed for Linux laptops (Systemd & Hyprland autostart compatible).
 
-It captures battery level (%), charge/discharge rate (Watts), voltage, capacity (Wh), State of Health (SoH %), cycle counts, and remaining runtime with **near-zero CPU and memory usage (~15MB RAM)**. It stores logs in an optimized SQLite database (`bun:sqlite` with WAL mode) and exports standalone, interactive HTML reports.
+It captures battery level (%), charge/discharge rate (Watts), voltage, capacity (Wh), State of Health (SoH %), cycle counts, and remaining runtime with **near-zero CPU and memory usage (~15MB RAM)**. It stores logs in an optimized SQLite database (`bun:sqlite` with WAL mode) and exports standalone, interactive HTML reports compiled via **Handlebars**.
 
 ---
 
@@ -18,6 +18,7 @@ It captures battery level (%), charge/discharge rate (Watts), voltage, capacity 
   - Tabbed layout: **Overview**, **Power & Voltage**, **Snapshot Logs**, and **Hardware Specs**.
   - Live status dot badges (discharging green, charging blue, full cyan).
   - Interactive Chart.js graphs with dark glass tooltips.
+  - Rendered via modular Handlebars templates (`src/templates/report.hbs`).
   - Safe Base64 dataset embedding for offline sharing.
   - One-click **CSV** and **JSON** raw data export directly inside the report.
 - 📦 **Single-Binary Release**: Compiles into a single zero-dependency executable (`dist/bathist`).
@@ -103,14 +104,16 @@ exec-once = /path/to/bathist/dist/bathist daemon
 ## Generating Interactive HTML Reports
 
 ```bash
-# Generate report for last 24 hours
-bathist report --range 24h --output report.html
+# Generate report for last 24 hours (default)
+bun run src/cli.ts report --range 24h --output report.html
+# Or using the compiled binary:
+./dist/bathist report --range 24h --output report.html
 
 # Generate report for last 7 days
-bathist report --range 7d --output report_7d.html
+./dist/bathist report --range 7d --output report_7d.html
 
 # Generate all-time report
-bathist report --range all --output report_all.html
+./dist/bathist report --range all --output report_all.html
 ```
 
 ---
@@ -144,6 +147,31 @@ Run unit test suite:
 
 ```bash
 bun test
+```
+
+---
+
+## Project Structure
+
+```
+bathist/
+├── src/
+│   ├── cli.ts            # Commander CLI entry point
+│   ├── daemon.ts         # Background collector loop
+│   ├── db.ts             # Native bun:sqlite database driver (WAL mode)
+│   ├── reporter.ts       # HTML report compiler & Base64 encoder
+│   ├── service.ts        # Systemd & Hyprland autostart integrations
+│   ├── sysfs.ts          # Linux /sys/class/power_supply reader
+│   ├── types.ts          # TypeScript interfaces & types
+│   └── templates/
+│       └── report.hbs    # Standalone Handlebars HTML dashboard template
+├── test/
+│   └── bathist.test.ts   # Unit test suite
+├── dist/                 # Compiled standalone binary (bun run build)
+├── package.json
+├── tsconfig.json
+├── README.md
+└── .gitignore
 ```
 
 ---
