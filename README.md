@@ -1,38 +1,44 @@
 # bathist ⚡
 
-> Ultra-lightweight, high-resolution Linux battery monitoring daemon & interactive visual report generator built with **Bun** & **TypeScript** (Systemd & Hyprland ready).
+> High-performance Linux battery monitor & Vercel-inspired visual telemetry generator built with **Bun**, **TypeScript**, and **Commander**.
 
-`bathist` monitors battery state, health (SoH), charging/discharging power draw (Watts), voltage dynamics, and cycle counts on Linux machines with **near-zero CPU and memory usage (~15MB RAM)**. It stores logs locally in an optimized SQLite database using Bun's native `bun:sqlite` C bindings, and can generate standalone, interactive HTML analytics reports with interactive charts, time range filtering, CSV/JSON export, and multi-battery support.
+`bathist` is an ultra-lightweight, high-resolution battery monitoring daemon and interactive visual analytics generator designed for Linux laptops (Systemd & Hyprland autostart compatible).
+
+It captures battery level (%), charge/discharge rate (Watts), voltage, capacity (Wh), State of Health (SoH %), cycle counts, and remaining runtime with **near-zero CPU and memory usage (~15MB RAM)**. It stores logs in an optimized SQLite database (`bun:sqlite` with WAL mode) and exports standalone HTML reports designed according to **Vercel's UI design system**.
 
 ---
 
-## Features
+## Key Features
 
-- 🔋 **Multi-Battery Support**: Automatically discovers and tracks multiple laptop batteries (`BAT0`, `BAT1`, etc.).
-- ⚡ **Accurate Real-Time Metrics**: Measures battery level (%), status, power draw (Watts), voltage (V), capacity (Wh), State of Health (SoH %), cycle counts, and remaining time.
-- 🪶 **Ultra-Low Resource Impact**: Uses Linux sysfs (`/sys/class/power_supply`) fast single-pass uevent reading and SQLite WAL mode. Virtually 0% CPU consumption during continuous background polling.
-- 📊 **Interactive HTML Reports**: Generates standalone, self-contained single-file HTML dashboards with Chart.js time series, time-range selectors (1h, 6h, 24h, 7d, 30d, All), metrics cards, recent log tables, and instant CSV/JSON data export.
-- ⚙️ **Boot Integration**: Includes easy setup commands for **systemd** user services and **Hyprland** (`exec-once`).
-- 📁 **SQLite Storage**: Efficient indexed storage using Bun's native SQLite engine (`~/.config/bathist/bathist.sqlite`).
+- 🔋 **Multi-Battery Telemetry**: Automatically discovers and monitors multiple laptop batteries (`BAT0`, `BAT1`, etc.).
+- ⚡ **Real-Time Wattage & Health Tracking**: Captures instant power draw in Watts, voltage dynamics, cycle count, and State of Health (SoH %).
+- 🎨 **Vercel UI Design System**: HTML dashboards crafted with Vercel's design language:
+  - Deep dark background (`#000000`) & `#0a0a0a` surface cards with 1px borders (`#222222`).
+  - Google Fonts (`Geist` / `Geist Mono`) typography.
+  - Vercel tabbed layout: **Overview**, **Power & Voltage**, **Snapshot Logs**, and **Hardware Specs**.
+  - Live status dot badges (discharging green, charging blue, full cyan).
+  - Interactive Chart.js graphs with dark glass tooltips.
+  - One-click **CSV** and **JSON** raw data export directly inside the report.
+- 📦 **Single-Binary Release**: Compiles into a single zero-dependency executable (`dist/bathist`).
+- 🛠️ **Commander CLI**: Industry-standard CLI argument parsing and auto-generated help.
+- 🪶 **Ultra-Low Overhead**: Fast single-pass sysfs reader (`/sys/class/power_supply`) with ~0% CPU usage.
 
 ---
 
 ## Quick Start
 
-### 1. Requirements & Installation
-
-Ensure [Bun](https://bun.sh) is installed on your Linux system.
+### 1. Installation
 
 ```bash
 # Clone repository
-git clone https://github.com/neon/bathist.git
+git clone git@github.com:henilmalaviya/bathist.git
 cd bathist
 
 # Install dependencies
 bun install
 ```
 
-### 2. Check Battery Status in Terminal
+### 2. Check Battery Status
 
 ```bash
 bun run src/cli.ts status
@@ -55,86 +61,78 @@ Device: BAT0 (HP Primary)
 
 ---
 
-## Running in Background
+## Standalone Single-Binary Compilation
 
-### Option A: Systemd User Service (Recommended for most Linux distros)
+`bathist` can be bundled into a single standalone binary executable without sharing source files or requiring Bun/Node pre-installed:
 
-Install and enable the user service:
+```bash
+bun run build
+
+# Run the single binary executable anywhere:
+./dist/bathist status
+./dist/bathist report --range 24h --output vercel_report.html
+```
+
+---
+
+## Background Autostart Setup
+
+### Systemd User Service
+
+Generate and install the user service:
 
 ```bash
 bun run src/cli.ts service install
 
-# Enable and start at boot:
+# Enable and start immediately:
 systemctl --user daemon-reload
 systemctl --user enable --now bathist.service
-
-# Check service status & logs:
-systemctl --user status bathist.service
-journalctl --user -u bathist.service -f
 ```
 
-### Option B: Hyprland Autostart
+### Hyprland Integration
 
-Add the following line to your `~/.config/hypr/hyprland.conf`:
+Add to your `~/.config/hypr/hyprland.conf`:
 
 ```ini
 exec-once = /path/to/bathist/dist/bathist daemon
 ```
-*(Or `exec-once = bun run /path/to/bathist/src/cli.ts daemon`)*
 
 ---
 
-## Generating Interactive HTML Reports
-
-Generate an interactive HTML report for any time period:
+## Generating Vercel UI HTML Reports
 
 ```bash
-# Generate report for last 24 hours (default)
-bun run src/cli.ts report --range 24h --output report.html
+# Generate report for last 24 hours
+bathist report --range 24h --output report.html
 
 # Generate report for last 7 days
-bun run src/cli.ts report --range 7d --output report_7d.html
+bathist report --range 7d --output report_7d.html
 
-# Generate all-time battery report
-bun run src/cli.ts report --range all --output full_report.html
+# Generate all-time report
+bathist report --range all --output report_all.html
 ```
-
-Open `report.html` in any browser to interact with charts, filter time ranges, and download raw data.
 
 ---
 
 ## CLI Reference
 
 ```
-USAGE:
-  bathist <command> [options]
+Usage: bathist [options] [command]
 
-COMMANDS:
-  daemon               Run background battery monitoring daemon
-  status               Print current live battery status and health summary to CLI
-  report               Generate a standalone interactive HTML dashboard
-  export               Export raw recorded battery metrics to JSON or CSV
-  service              Install systemd user service & print Hyprland autostart snippet
-  prune                Prune database logs older than specified days (default 90)
+High Performance Linux Battery Monitor & Visual Analytics Generator
 
-OPTIONS:
-  --interval <ms>      Daemon polling interval in ms (default: 5000)
-  --range <range>      Report/Export time range: 1h, 6h, 24h, 7d, 30d, all (default: 24h)
-  --output <path>      Output file path for report/export (default: battery_report.html)
-  --format <json|csv>  Export format (default: json)
-  --db <path>          Custom SQLite database file path
-  --verbose            Enable verbose logging in daemon mode
-```
+Options:
+  -V, --version     output the version number
+  -h, --help        display help for command
 
----
-
-## Building Standalone Binary
-
-Compile `bathist` into a single self-contained binary executable:
-
-```bash
-bun run build
-./dist/bathist status
+Commands:
+  daemon [options]  Run background battery monitoring daemon
+  status [options]  Print current live battery status and health summary to CLI
+  report [options]  Generate a standalone interactive Vercel UI HTML dashboard
+  export [options]  Export raw recorded battery metrics to JSON or CSV
+  service [action]  Install systemd user service or print Hyprland config snippet
+  prune [options]   Prune database logs older than specified days
+  help [command]    display help for command
 ```
 
 ---
@@ -151,4 +149,4 @@ bun test
 
 ## License
 
-MIT License
+MIT

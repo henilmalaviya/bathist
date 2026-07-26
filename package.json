@@ -30,5 +30,8 @@
   "license": "MIT",
   "devDependencies": {
     "@types/bun": "latest"
+  },
+  "dependencies": {
+    "commander": "^15.0.0"
   }
 }

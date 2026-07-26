@@ -19,7 +19,7 @@ function parseTimeRangeToSeconds(range: string): number | null {
     const mins = parseFloat(r.slice(0, -1));
     return mins * 60;
   }
-  return 86400; // default 24h
+  return 86400;
 }
 
 export function generateHtmlReport(options: ReportOptions): string {
@@ -45,7 +45,7 @@ export function generateHtmlReport(options: ReportOptions): string {
 
   db.close();
 
-  const htmlContent = buildHtmlDocument({
+  const htmlContent = buildVercelHtmlDocument({
     allBatNames,
     readingsMap,
     summaries,
@@ -73,34 +73,36 @@ interface HtmlPayload {
   generatedAt: string;
 }
 
-function buildHtmlDocument(payload: HtmlPayload): string {
+function buildVercelHtmlDocument(payload: HtmlPayload): string {
   const jsonPayload = JSON.stringify(payload);
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>bathist - Battery Analytics Report</title>
-  <!-- Modern Font & Chart.js -->
+  <title>bathist • Battery Analytics</title>
+  <!-- Vercel Design System Fonts & Chart.js -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      --bg-dark: #090d16;
-      --bg-card: #111827;
-      --bg-card-hover: #1f2937;
-      --border-color: #1f2937;
-      --text-main: #f3f4f6;
-      --text-muted: #9ca3af;
-      --accent-green: #10b981;
-      --accent-cyan: #06b6d4;
-      --accent-amber: #f59e0b;
-      --accent-purple: #8b5cf6;
-      --accent-rose: #f43f5e;
-      --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --ds-background: #000000;
+      --ds-surface: #0a0a0a;
+      --ds-surface-hover: #121212;
+      --ds-border: #222222;
+      --ds-border-active: #444444;
+      --ds-text-primary: #ededed;
+      --ds-text-secondary: #888888;
+      --ds-text-tertiary: #666666;
+      --ds-accent: #0070f3;
+      --ds-accent-light: #3291ff;
+      --ds-success: #10b981;
+      --ds-warning: #f59e0b;
+      --ds-font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --ds-font-mono: 'Geist Mono', monospace;
     }
 
     * {
@@ -110,364 +112,468 @@ function buildHtmlDocument(payload: HtmlPayload): string {
     }
 
     body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      font-family: var(--font-family);
+      background-color: var(--ds-background);
+      color: var(--ds-text-primary);
+      font-family: var(--ds-font-sans);
+      letter-spacing: -0.02em;
       line-height: 1.5;
-      padding: 24px;
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
     .container {
-      max-width: 1400px;
+      max-width: 1280px;
       margin: 0 auto;
+      padding: 32px 24px;
     }
 
-    /* Header */
-    header {
+    /* Vercel Header */
+    .vercel-header {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--ds-border);
       gap: 16px;
     }
 
-    .brand {
+    .brand-group {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
-    .brand-icon {
-      width: 44px;
-      height: 44px;
-      background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
-      border-radius: 12px;
+    .vercel-logo-badge {
+      width: 40px;
+      height: 40px;
+      background: var(--ds-surface);
+      border: 1px solid var(--ds-border);
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .vercel-triangle {
+      width: 0;
+      height: 0;
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-bottom: 15px solid #ffffff;
     }
 
     .brand-title h1 {
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      background: linear-gradient(90deg, #ffffff, #9ca3af);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ds-text-primary);
+      letter-spacing: -0.03em;
     }
 
     .brand-title p {
       font-size: 13px;
-      color: var(--text-muted);
+      color: var(--ds-text-secondary);
     }
 
-    /* Controls Bar */
-    .controls-bar {
+    /* Actions Toolbar */
+    .toolbar {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
-    .btn, select {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 8px 16px;
-      border-radius: 8px;
+    .btn-primary {
+      background: #ffffff;
+      color: #000000;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
       font-size: 13px;
       font-weight: 600;
       font-family: inherit;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
       display: inline-flex;
       align-items: center;
       gap: 6px;
     }
 
-    .btn:hover, select:hover {
-      background: var(--bg-card-hover);
-      border-color: #374151;
+    .btn-primary:hover {
+      background: #ccc;
       transform: translateY(-1px);
     }
 
-    .btn-active {
-      background: linear-gradient(135deg, #059669, #0891b2) !important;
-      border-color: transparent !important;
-      color: #ffffff !important;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    .btn-secondary, select {
+      background: var(--ds-surface);
+      color: var(--ds-text-primary);
+      border: 1px solid var(--ds-border);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s ease;
     }
 
-    /* Metric Cards Grid */
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
+    .btn-secondary:hover, select:hover {
+      background: var(--ds-surface-hover);
+      border-color: var(--ds-border-active);
     }
 
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 20px;
-      transition: transform 0.2s ease, border-color 0.2s ease;
-      position: relative;
-      overflow: hidden;
+    /* Range Pill Selector */
+    .pill-group {
+      background: var(--ds-surface);
+      border: 1px solid var(--ds-border);
+      border-radius: 8px;
+      padding: 3px;
+      display: inline-flex;
+      gap: 2px;
     }
 
-    .card:hover {
-      border-color: #374151;
-      transform: translateY(-2px);
-    }
-
-    .card-label {
+    .pill-btn {
+      background: transparent;
+      border: none;
+      color: var(--ds-text-secondary);
+      padding: 5px 12px;
+      border-radius: 5px;
       font-size: 12px;
       font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .pill-btn:hover {
+      color: var(--ds-text-primary);
+    }
+
+    .pill-btn.active {
+      background: #222222;
+      color: #ffffff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    /* Tabs Navigation */
+    .tabs-nav {
       display: flex;
-      align-items: center;
+      gap: 24px;
+      margin-top: 24px;
+      border-bottom: 1px solid var(--ds-border);
+    }
+
+    .tab-item {
+      padding: 10px 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ds-text-secondary);
+      cursor: pointer;
+      position: relative;
+      transition: color 0.15s ease;
+    }
+
+    .tab-item:hover {
+      color: var(--ds-text-primary);
+    }
+
+    .tab-item.active {
+      color: var(--ds-text-primary);
+      font-weight: 600;
+    }
+
+    .tab-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #ffffff;
+    }
+
+    /* Grid Layout */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .kpi-card {
+      background: var(--ds-surface);
+      border: 1px solid var(--ds-border);
+      border-radius: 12px;
+      padding: 20px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .kpi-card:hover {
+      border-color: var(--ds-border-active);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .kpi-header {
+      display: flex;
       justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--ds-text-secondary);
+      font-weight: 500;
+      margin-bottom: 12px;
     }
 
-    .card-value {
-      font-size: 28px;
-      font-weight: 800;
-      line-height: 1.2;
+    .kpi-value {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--ds-text-primary);
+      line-height: 1;
     }
 
-    .card-subtext {
+    .kpi-footer {
+      margin-top: 10px;
       font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 6px;
+      color: var(--ds-text-tertiary);
+      font-family: var(--ds-font-mono);
     }
 
-    /* Charts Section */
+    /* Vercel Status Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--ds-border);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot-discharging { background: var(--ds-success); box-shadow: 0 0 8px var(--ds-success); }
+    .dot-charging { background: var(--ds-accent-light); box-shadow: 0 0 8px var(--ds-accent-light); }
+    .dot-full { background: #06b6d4; }
+    .dot-warning { background: var(--ds-warning); }
+
+    /* Section Cards */
+    .section-card {
+      background: var(--ds-surface);
+      border: 1px solid var(--ds-border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 24px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ds-text-primary);
+      margin-bottom: 20px;
+      letter-spacing: -0.02em;
+    }
+
     .charts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(560px, 1fr));
       gap: 20px;
-      margin-bottom: 24px;
     }
 
     @media (max-width: 768px) {
-      .charts-grid {
-        grid-template-columns: 1fr;
-      }
+      .charts-grid { grid-template-columns: 1fr; }
     }
 
-    .chart-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 20px;
-    }
-
-    .chart-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    .chart-title {
-      font-size: 16px;
-      font-weight: 700;
-    }
-
-    .chart-container {
-      position: relative;
+    .chart-box {
       height: 320px;
-      width: 100%;
+      position: relative;
     }
 
-    /* Table Section */
-    .table-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 24px;
-      overflow: hidden;
-    }
-
-    .table-wrapper {
+    /* Data Table */
+    .table-container {
       overflow-x: auto;
-      max-height: 400px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      text-align: left;
       font-size: 13px;
+      text-align: left;
     }
 
     th {
-      background: #1f2937;
-      color: var(--text-muted);
-      font-weight: 600;
+      border-bottom: 1px solid var(--ds-border);
+      color: var(--ds-text-secondary);
+      font-weight: 500;
       padding: 12px 16px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      font-family: var(--ds-font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
     }
 
     td {
+      border-bottom: 1px solid #161616;
       padding: 12px 16px;
-      border-bottom: 1px solid var(--border-color);
+      color: var(--ds-text-primary);
+      font-family: var(--ds-font-mono);
     }
 
     tr:hover td {
       background: rgba(255, 255, 255, 0.02);
     }
 
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-
-    .badge-charging { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
-    .badge-discharging { background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); }
-    .badge-full { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
-    .badge-unknown { background: rgba(156, 163, 175, 0.15); color: var(--text-muted); }
-
     footer {
-      text-align: center;
-      color: var(--text-muted);
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--ds-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       font-size: 12px;
-      margin-top: 32px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border-color);
+      color: var(--ds-text-tertiary);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <header>
-      <div class="brand">
-        <div class="brand-icon">⚡</div>
+    <!-- Header -->
+    <header class="vercel-header">
+      <div class="brand-group">
+        <div class="vercel-logo-badge">
+          <div class="vercel-triangle"></div>
+        </div>
         <div class="brand-title">
-          <h1>bathist Analytics</h1>
-          <p>Battery Health & System Power Monitor</p>
+          <h1>bathist</h1>
+          <p>Battery Analytics & Power Telemetry</p>
         </div>
       </div>
 
-      <div class="controls-bar">
-        <!-- Battery Selector -->
-        <select id="batterySelect" onchange="updateDashboard()">
-        </select>
+      <div class="toolbar">
+        <select id="batterySelect" onchange="updateDashboard()"></select>
 
-        <!-- Time Range Selector Buttons -->
-        <div id="rangeGroup">
-          <button class="btn" onclick="setTimeRange('1h')">1h</button>
-          <button class="btn" onclick="setTimeRange('6h')">6h</button>
-          <button class="btn" onclick="setTimeRange('24h')">24h</button>
-          <button class="btn" onclick="setTimeRange('7d')">7d</button>
-          <button class="btn" onclick="setTimeRange('30d')">30d</button>
-          <button class="btn" onclick="setTimeRange('all')">All</button>
+        <div class="pill-group" id="rangeGroup">
+          <button class="pill-btn" onclick="setTimeRange('1h')">1h</button>
+          <button class="pill-btn" onclick="setTimeRange('6h')">6h</button>
+          <button class="pill-btn" onclick="setTimeRange('24h')">24h</button>
+          <button class="pill-btn" onclick="setTimeRange('7d')">7d</button>
+          <button class="pill-btn" onclick="setTimeRange('30d')">30d</button>
+          <button class="pill-btn" onclick="setTimeRange('all')">All</button>
         </div>
 
-        <!-- Export Buttons -->
-        <button class="btn" onclick="exportData('json')">📥 JSON</button>
-        <button class="btn" onclick="exportData('csv')">📊 CSV</button>
+        <button class="btn-primary" onclick="exportData('csv')">Export CSV</button>
+        <button class="btn-secondary" onclick="exportData('json')">Export JSON</button>
       </div>
     </header>
 
-    <!-- Key Metrics Grid -->
-    <div class="metrics-grid">
-      <div class="card">
-        <div class="card-label">Current Battery <span>🔋</span></div>
-        <div class="card-value" id="valCapacity">--%</div>
-        <div class="card-subtext" id="valStatus">--</div>
-      </div>
+    <!-- Navigation Tabs -->
+    <nav class="tabs-nav">
+      <div class="tab-item active" onclick="switchTab('overview')">Overview</div>
+      <div class="tab-item" onclick="switchTab('analytics')">Power & Voltage</div>
+      <div class="tab-item" onclick="switchTab('table')">Logs</div>
+      <div class="tab-item" onclick="switchTab('specs')">Hardware Specs</div>
+    </nav>
 
-      <div class="card">
-        <div class="card-label">State of Health (SoH) <span>🩺</span></div>
-        <div class="card-value" id="valSoh">--%</div>
-        <div class="card-subtext" id="valHealthDegradation">Design vs Full Capacity</div>
-      </div>
-
-      <div class="card">
-        <div class="card-label">Power Draw <span>⚡</span></div>
-        <div class="card-value" id="valPower">-- W</div>
-        <div class="card-subtext" id="valPowerStats">Avg: -- W | Peak: -- W</div>
-      </div>
-
-      <div class="card">
-        <div class="card-label">Voltage & Energy <span>⚡</span></div>
-        <div class="card-value" id="valVoltage">-- V</div>
-        <div class="card-subtext" id="valEnergyNow">-- Wh / -- Wh</div>
-      </div>
-
-      <div class="card">
-        <div class="card-label">Est. Time Remaining <span>⏳</span></div>
-        <div class="card-value" id="valTimeRemaining">--</div>
-        <div class="card-subtext" id="valCycleCount">Cycles: --</div>
-      </div>
-    </div>
-
-    <!-- Charts Grid -->
-    <div class="charts-grid">
-      <div class="chart-card">
-        <div class="chart-header">
-          <div class="chart-title">Battery Level (%) & Status Timeline</div>
+    <!-- Tab 1: Overview -->
+    <div id="tab-overview">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span>Battery Level</span>
+            <span id="badgeState" class="status-badge"><span id="dotState" class="dot"></span> <span id="txtState">--</span></span>
+          </div>
+          <div class="kpi-value" id="valCapacity">--%</div>
+          <div class="kpi-footer" id="valEnergy">-- Wh / -- Wh</div>
         </div>
-        <div class="chart-container">
+
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span>State of Health (SoH)</span>
+            <span>🩺</span>
+          </div>
+          <div class="kpi-value" id="valSoh">--%</div>
+          <div class="kpi-footer" id="valDesignCapacity">Design: -- Wh</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span>Current Power Draw</span>
+            <span>⚡</span>
+          </div>
+          <div class="kpi-value" id="valPower">-- W</div>
+          <div class="kpi-footer" id="valPowerStats">Avg: -- W | Peak: -- W</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span>Voltage & Cycles</span>
+            <span>🔌</span>
+          </div>
+          <div class="kpi-value" id="valVoltage">-- V</div>
+          <div class="kpi-footer" id="valCycles">Cycles: --</div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title">Capacity (%) & Discharge Timeline</div>
+        <div class="chart-box">
           <canvas id="chartCapacity"></canvas>
         </div>
       </div>
+    </div>
 
-      <div class="chart-card">
-        <div class="chart-header">
-          <div class="chart-title">Power Consumption (Watts) & Voltage (V)</div>
-        </div>
-        <div class="chart-container">
+    <!-- Tab 2: Power Analytics -->
+    <div id="tab-analytics" style="display: none;">
+      <div class="section-card">
+        <div class="section-title">Power Consumption (Watts) vs Voltage (Volts)</div>
+        <div class="chart-box" style="height: 400px;">
           <canvas id="chartPower"></canvas>
         </div>
       </div>
     </div>
 
-    <!-- Data Table -->
-    <div class="table-card">
-      <div class="chart-header">
-        <div class="chart-title">Recent Battery Snapshot Log</div>
-      </div>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Battery</th>
-              <th>Capacity</th>
-              <th>Status</th>
-              <th>Power (W)</th>
-              <th>Voltage (V)</th>
-              <th>Energy (Wh)</th>
-              <th>SoH %</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody">
-          </tbody>
-        </table>
+    <!-- Tab 3: Table Logs -->
+    <div id="tab-table" style="display: none;">
+      <div class="section-card">
+        <div class="section-title">Telemetry Snapshot Log</div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Device</th>
+                <th>Capacity</th>
+                <th>Status</th>
+                <th>Power (W)</th>
+                <th>Voltage (V)</th>
+                <th>Energy (Wh)</th>
+                <th>SoH %</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
+    <!-- Tab 4: Hardware Specs -->
+    <div id="tab-specs" style="display: none;">
+      <div class="section-card">
+        <div class="section-title">Battery Hardware Diagnostics</div>
+        <div id="specsContent" style="font-family: var(--ds-font-mono); font-size: 13px; color: var(--ds-text-secondary); line-height: 2;"></div>
+      </div>
+    </div>
+
+    <!-- Footer -->
     <footer>
-      Report generated by <strong>bathist</strong> on <span id="genDate"></span> • High Performance Linux Battery Monitor
+      <div>Generated by <strong>bathist</strong> • High Performance Linux Telemetry</div>
+      <div id="genDate"></div>
     </footer>
   </div>
 
@@ -481,11 +587,27 @@ function buildHtmlDocument(payload: HtmlPayload): string {
 
     document.getElementById("genDate").textContent = new Date(DATA.generatedAt).toLocaleString();
 
-    // Populate battery select dropdown
     const batSelect = document.getElementById("batterySelect");
     batSelect.innerHTML = DATA.allBatNames.map(b => \`<option value="\${b}">Battery \${b}</option>\`).join("");
     if (DATA.allBatNames.length > 1) {
       batSelect.innerHTML += \`<option value="ALL">All Batteries</option>\`;
+    }
+
+    function switchTab(tabName) {
+      const tabs = ['overview', 'analytics', 'table', 'specs'];
+      tabs.forEach(t => {
+        const el = document.getElementById("tab-" + t);
+        if (el) el.style.display = (t === tabName) ? "block" : "none";
+      });
+
+      document.querySelectorAll(".tab-item").forEach((el, idx) => {
+        if (tabs[idx] === tabName) el.classList.add("active");
+        else el.classList.remove("active");
+      });
+
+      if (tabName === 'analytics' || tabName === 'overview') {
+        setTimeout(updateDashboard, 50);
+      }
     }
 
     function setTimeRange(range) {
@@ -495,12 +617,11 @@ function buildHtmlDocument(payload: HtmlPayload): string {
     }
 
     function updateRangeButtons() {
-      const btns = document.querySelectorAll("#rangeGroup .btn");
-      btns.forEach(btn => {
+      document.querySelectorAll("#rangeGroup .pill-btn").forEach(btn => {
         if (btn.textContent.toLowerCase() === currentTimeRange.toLowerCase()) {
-          btn.classList.add("btn-active");
+          btn.classList.add("active");
         } else {
-          btn.classList.remove("btn-active");
+          btn.classList.remove("active");
         }
       });
     }
@@ -535,22 +656,31 @@ function buildHtmlDocument(payload: HtmlPayload): string {
       updateKPIs(readings);
       renderCharts(readings);
       renderTable(readings);
+      renderSpecs();
     }
 
     function updateKPIs(readings) {
       if (!readings || readings.length === 0) {
         document.getElementById("valCapacity").textContent = "--%";
-        document.getElementById("valStatus").textContent = "No data in range";
+        document.getElementById("txtState").textContent = "No Data";
         return;
       }
 
       const latest = readings[readings.length - 1];
       document.getElementById("valCapacity").textContent = latest.capacityPercent + "%";
-      document.getElementById("valStatus").textContent = latest.status + " (" + latest.capacityLevel + ")";
+      document.getElementById("txtState").textContent = latest.status;
 
+      const dot = document.getElementById("dotState");
+      dot.className = "dot";
+      const st = latest.status.toLowerCase();
+      if (st === "discharging") dot.classList.add("dot-discharging");
+      else if (st === "charging") dot.classList.add("dot-charging");
+      else if (st === "full") dot.classList.add("dot-full");
+      else dot.classList.add("dot-warning");
+
+      document.getElementById("valEnergy").textContent = latest.energyNowWh + " Wh / " + latest.energyFullWh + " Wh";
       document.getElementById("valSoh").textContent = latest.sohPercent.toFixed(1) + "%";
-      document.getElementById("valHealthDegradation").textContent = 
-        latest.energyFullWh + " Wh / " + latest.energyFullDesignWh + " Wh design";
+      document.getElementById("valDesignCapacity").textContent = "Design: " + latest.energyFullDesignWh + " Wh";
 
       document.getElementById("valPower").textContent = latest.powerW.toFixed(2) + " W";
 
@@ -560,21 +690,7 @@ function buildHtmlDocument(payload: HtmlPayload): string {
       document.getElementById("valPowerStats").textContent = "Avg: " + avgP + " W | Peak: " + maxP + " W";
 
       document.getElementById("valVoltage").textContent = latest.voltageV.toFixed(2) + " V";
-      document.getElementById("valEnergyNow").textContent = latest.energyNowWh + " Wh / " + latest.energyFullWh + " Wh";
-
-      if (latest.status.toLowerCase() === "discharging" && latest.timeToEmptyMin) {
-        const h = Math.floor(latest.timeToEmptyMin / 60);
-        const m = latest.timeToEmptyMin % 60;
-        document.getElementById("valTimeRemaining").textContent = h > 0 ? h + "h " + m + "m" : m + " mins";
-      } else if (latest.status.toLowerCase() === "charging" && latest.timeToFullMin) {
-        const h = Math.floor(latest.timeToFullMin / 60);
-        const m = latest.timeToFullMin % 60;
-        document.getElementById("valTimeRemaining").textContent = h > 0 ? h + "h " + m + "m" : m + " mins";
-      } else {
-        document.getElementById("valTimeRemaining").textContent = latest.status === "Full" ? "Full Battery" : "--";
-      }
-
-      document.getElementById("valCycleCount").textContent = "Cycles: " + (latest.cycleCount || 0);
+      document.getElementById("valCycles").textContent = "Cycles: " + (latest.cycleCount || 0);
     }
 
     function renderCharts(readings) {
@@ -583,7 +699,7 @@ function buildHtmlDocument(payload: HtmlPayload): string {
       const powers = readings.map(r => r.powerW);
       const voltages = readings.map(r => r.voltageV);
 
-      // Capacity Chart
+      // Capacity Chart (Vercel Style)
       if (chartCapInstance) chartCapInstance.destroy();
       const ctxCap = document.getElementById("chartCapacity").getContext("2d");
       chartCapInstance = new Chart(ctxCap, {
@@ -593,10 +709,10 @@ function buildHtmlDocument(payload: HtmlPayload): string {
           datasets: [{
             label: 'Capacity (%)',
             data: caps,
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderColor: '#ffffff',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
             fill: true,
-            tension: 0.3,
+            tension: 0.2,
             borderWidth: 2,
             pointRadius: readings.length > 100 ? 0 : 2
           }]
@@ -606,8 +722,8 @@ function buildHtmlDocument(payload: HtmlPayload): string {
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', maxTicksLimit: 10 } },
-            y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } }
+            x: { grid: { color: '#161616' }, ticks: { color: '#666666', maxTicksLimit: 10 } },
+            y: { min: 0, max: 100, grid: { color: '#161616' }, ticks: { color: '#666666' } }
           }
         }
       });
@@ -623,10 +739,10 @@ function buildHtmlDocument(payload: HtmlPayload): string {
             {
               label: 'Power Draw (W)',
               data: powers,
-              borderColor: '#f59e0b',
-              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              borderColor: '#0070f3',
+              backgroundColor: 'rgba(0, 112, 243, 0.08)',
               fill: true,
-              tension: 0.3,
+              tension: 0.2,
               borderWidth: 2,
               yAxisID: 'yPower',
               pointRadius: readings.length > 100 ? 0 : 2
@@ -634,10 +750,10 @@ function buildHtmlDocument(payload: HtmlPayload): string {
             {
               label: 'Voltage (V)',
               data: voltages,
-              borderColor: '#06b6d4',
+              borderColor: '#10b981',
               borderWidth: 1.5,
               borderDash: [4, 4],
-              tension: 0.3,
+              tension: 0.2,
               yAxisID: 'yVolt',
               pointRadius: 0
             }
@@ -646,11 +762,11 @@ function buildHtmlDocument(payload: HtmlPayload): string {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#9ca3af' } } },
+          plugins: { legend: { labels: { color: '#888888' } } },
           scales: {
-            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', maxTicksLimit: 10 } },
-            yPower: { type: 'linear', position: 'left', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#f59e0b' } },
-            yVolt: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#06b6d4' } }
+            x: { grid: { color: '#161616' }, ticks: { color: '#666666', maxTicksLimit: 10 } },
+            yPower: { type: 'linear', position: 'left', grid: { color: '#161616' }, ticks: { color: '#0070f3' } },
+            yVolt: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#10b981' } }
           }
         }
       });
@@ -658,41 +774,44 @@ function buildHtmlDocument(payload: HtmlPayload): string {
 
     function renderTable(readings) {
       const tbody = document.getElementById("tableBody");
-      const slice = readings.slice(-50).reverse(); // Show last 50 entries
-      tbody.innerHTML = slice.map(r => {
-        let badgeClass = "badge-unknown";
-        const st = r.status.toLowerCase();
-        if (st === "charging") badgeClass = "badge-charging";
-        else if (st === "discharging") badgeClass = "badge-discharging";
-        else if (st === "full") badgeClass = "badge-full";
+      const slice = readings.slice(-50).reverse();
+      tbody.innerHTML = slice.map(r => \`
+        <tr>
+          <td>\${new Date(r.timestamp * 1000).toLocaleString()}</td>
+          <td>\${r.batteryName}</td>
+          <td>\${r.capacityPercent}%</td>
+          <td>\${r.status}</td>
+          <td>\${r.powerW.toFixed(2)} W</td>
+          <td>\${r.voltageV.toFixed(2)} V</td>
+          <td>\${r.energyNowWh.toFixed(1)} Wh</td>
+          <td>\${r.sohPercent.toFixed(1)}%</td>
+        </tr>
+      \`).join("");
+    }
 
-        return \`
-          <tr>
-            <td>\${new Date(r.timestamp * 1000).toLocaleString()}</td>
-            <td>\${r.batteryName}</td>
-            <td><strong>\${r.capacityPercent}%</strong></td>
-            <td><span class="badge \${badgeClass}">\${r.status}</span></td>
-            <td>\${r.powerW.toFixed(2)} W</td>
-            <td>\${r.voltageV.toFixed(2)} V</td>
-            <td>\${r.energyNowWh.toFixed(1)} Wh</td>
-            <td>\${r.sohPercent.toFixed(1)}%</td>
-          </tr>
-        \`;
-      }).join("");
+    function renderSpecs() {
+      const info = DATA.staticInfoMap[currentBattery] || {};
+      const container = document.getElementById("specsContent");
+      container.innerHTML = \`
+        <div><strong>Device Name:</strong> \${info.name || currentBattery}</div>
+        <div><strong>Manufacturer:</strong> \${info.manufacturer || 'N/A'}</div>
+        <div><strong>Model Name:</strong> \${info.modelName || 'N/A'}</div>
+        <div><strong>Serial Number:</strong> \${info.serialNumber || 'N/A'}</div>
+        <div><strong>Technology:</strong> \${info.technology || 'N/A'}</div>
+        <div><strong>Design Capacity:</strong> \${info.energyFullDesignWh || 0} Wh</div>
+        <div><strong>Min Voltage Design:</strong> \${info.voltageMinDesignV || 0} V</div>
+      \`;
     }
 
     function exportData(format) {
       const readings = filterReadings();
       if (format === 'json') {
-        const jsonStr = JSON.stringify(readings, null, 2);
-        downloadFile(jsonStr, "bathist_export.json", "application/json");
+        downloadFile(JSON.stringify(readings, null, 2), "bathist_export.json", "application/json");
       } else if (format === 'csv') {
         if (readings.length === 0) return;
         const keys = Object.keys(readings[0]);
         const csvRows = [keys.join(",")];
-        readings.forEach(r => {
-          csvRows.push(keys.map(k => JSON.stringify(r[k] ?? "")).join(","));
-        });
+        readings.forEach(r => csvRows.push(keys.map(k => JSON.stringify(r[k] ?? "")).join(",")));
         downloadFile(csvRows.join("\n"), "bathist_export.csv", "text/csv");
       }
     }
@@ -707,7 +826,6 @@ function buildHtmlDocument(payload: HtmlPayload): string {
       URL.revokeObjectURL(url);
     }
 
-    // Initial render
     updateRangeButtons();
     updateDashboard();
   </script>
