@@ -1,7 +1,7 @@
 node_modules/
 dist/
+scratch/
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm
 *.html
-!test_report.html
