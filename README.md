@@ -1,10 +1,10 @@
 # bathist ⚡
 
-> High-performance Linux battery monitor & Vercel-inspired visual telemetry generator built with **Bun**, **TypeScript**, and **Commander**.
+> High-performance Linux battery monitor & visual telemetry generator built with **Bun**, **TypeScript**, and **Commander**.
 
 `bathist` is an ultra-lightweight, high-resolution battery monitoring daemon and interactive visual analytics generator designed for Linux laptops (Systemd & Hyprland autostart compatible).
 
-It captures battery level (%), charge/discharge rate (Watts), voltage, capacity (Wh), State of Health (SoH %), cycle counts, and remaining runtime with **near-zero CPU and memory usage (~15MB RAM)**. It stores logs in an optimized SQLite database (`bun:sqlite` with WAL mode) and exports standalone HTML reports designed according to **Vercel's UI design system**.
+It captures battery level (%), charge/discharge rate (Watts), voltage, capacity (Wh), State of Health (SoH %), cycle counts, and remaining runtime with **near-zero CPU and memory usage (~15MB RAM)**. It stores logs in an optimized SQLite database (`bun:sqlite` with WAL mode) and exports standalone, interactive HTML reports.
 
 ---
 
@@ -12,12 +12,13 @@ It captures battery level (%), charge/discharge rate (Watts), voltage, capacity 
 
 - 🔋 **Multi-Battery Telemetry**: Automatically discovers and monitors multiple laptop batteries (`BAT0`, `BAT1`, etc.).
 - ⚡ **Real-Time Wattage & Health Tracking**: Captures instant power draw in Watts, voltage dynamics, cycle count, and State of Health (SoH %).
-- 🎨 **Vercel UI Design System**: HTML dashboards crafted with Vercel's design language:
+- 🎨 **Interactive HTML Dashboard**:
   - Deep dark background (`#000000`) & `#0a0a0a` surface cards with 1px borders (`#222222`).
   - Google Fonts (`Geist` / `Geist Mono`) typography.
-  - Vercel tabbed layout: **Overview**, **Power & Voltage**, **Snapshot Logs**, and **Hardware Specs**.
+  - Tabbed layout: **Overview**, **Power & Voltage**, **Snapshot Logs**, and **Hardware Specs**.
   - Live status dot badges (discharging green, charging blue, full cyan).
   - Interactive Chart.js graphs with dark glass tooltips.
+  - Safe Base64 dataset embedding for offline sharing.
   - One-click **CSV** and **JSON** raw data export directly inside the report.
 - 📦 **Single-Binary Release**: Compiles into a single zero-dependency executable (`dist/bathist`).
 - 🛠️ **Commander CLI**: Industry-standard CLI argument parsing and auto-generated help.
@@ -70,7 +71,7 @@ bun run build
 
 # Run the single binary executable anywhere:
 ./dist/bathist status
-./dist/bathist report --range 24h --output vercel_report.html
+./dist/bathist report --range 24h --output report.html
 ```
 
 ---
@@ -99,7 +100,7 @@ exec-once = /path/to/bathist/dist/bathist daemon
 
 ---
 
-## Generating Vercel UI HTML Reports
+## Generating Interactive HTML Reports
 
 ```bash
 # Generate report for last 24 hours
@@ -128,7 +129,7 @@ Options:
 Commands:
   daemon [options]  Run background battery monitoring daemon
   status [options]  Print current live battery status and health summary to CLI
-  report [options]  Generate a standalone interactive Vercel UI HTML dashboard
+  report [options]  Generate a standalone interactive HTML dashboard
   export [options]  Export raw recorded battery metrics to JSON or CSV
   service [action]  Install systemd user service or print Hyprland config snippet
   prune [options]   Prune database logs older than specified days

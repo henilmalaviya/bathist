@@ -86,7 +86,7 @@ program
 // Report Command
 program
   .command("report")
-  .description("Generate a standalone interactive Vercel UI HTML dashboard")
+  .description("Generate a standalone interactive HTML dashboard")
   .option("-r, --range <range>", "Time range: 1h, 6h, 24h, 7d, 30d, all", "24h")
   .option("-o, --output <path>", "Output HTML file path", "battery_report.html")
   .option("-d, --db <path>", "Custom SQLite database file path")
