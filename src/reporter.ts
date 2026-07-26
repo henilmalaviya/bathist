@@ -1,9 +1,12 @@
 import { writeFileSync, mkdirSync, existsSync } from "fs";
 import { dirname } from "path";
+import Handlebars from "handlebars";
+import rawTemplate from "./templates/report.hbs" with { type: "text" };
 import { BatteryDatabase } from "./db.js";
 import { discoverBatteries, getBatteryStaticInfo } from "./sysfs.js";
-import { renderReportHtml } from "./template.js";
 import type { ReportOptions, BatteryReading, BatterySummary } from "./types.js";
+
+const template = Handlebars.compile(rawTemplate);
 
 function parseTimeRangeToSeconds(range: string): number | null {
   const r = range.toLowerCase();
@@ -55,11 +58,10 @@ export function generateHtmlReport(options: ReportOptions): string {
     generatedAt: new Date().toISOString(),
   };
 
-  // Safe Base64 encoding of data payload for template injection
   const payloadJson = JSON.stringify(payload);
   const payloadBase64 = Buffer.from(payloadJson, "utf-8").toString("base64");
 
-  const htmlContent = renderReportHtml(payloadBase64);
+  const htmlContent = template({ payloadBase64 });
 
   const outPath = options.outputPath || "battery_report.html";
   const dir = dirname(outPath);
